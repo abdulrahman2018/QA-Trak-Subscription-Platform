@@ -1,0 +1,322 @@
+@page "/subscription"
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Notifications
+<PageTitle>QA Trak Subscription</PageTitle>
+
+<style>
+    .subscription-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        margin: 20px auto;
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        padding: 0 20px;
+    }
+
+    .switch-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 30px;
+        background: #f5f5f5;
+        padding: 10px 20px;
+        border-radius: 25px;
+    }
+
+    .switch-container label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .plan-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .plan-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .plan-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .plan-card.community {
+        background-color: #e8f5e9;
+    }
+
+    .plan-card.standard {
+        background-color: #fff3e0;
+    }
+
+    .plan-card.professional {
+        background-color: #fff8e1;
+    }
+
+    .plan-card.enterprise {
+        background-color: #e3f2fd;
+    }
+
+    .plan-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .plan-price {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 15px 0;
+        color: #2196F3;
+    }
+
+    .plan-features {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+        text-align: left;
+    }
+
+    .plan-features li {
+        margin: 10px 0;
+        padding-left: 25px;
+        position: relative;
+    }
+
+    .plan-features li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #4CAF50;
+    }
+
+    .radio-container {
+        margin-bottom: 15px;
+    }
+
+    .radio-container input[type="radio"] {
+        transform: scale(1.2);
+        margin-right: 8px;
+    }
+
+    .subscribe-button {
+        width: 100%;
+        padding: 12px;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .subscribe-button:hover:not(:disabled) {
+        background: #1976D2;
+    }
+
+    .subscribe-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+
+    .logo-container {
+        margin: 30px 0;
+    }
+
+    .logo-container img {
+        max-width: 150px;
+        height: auto;
+    }
+
+    .feedback-message {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        font-weight: 500;
+    }
+</style>
+
+<div class="subscription-container">
+    <div class="switch-container">
+        <label>Monthly</label>
+        <SfSwitch @bind-Checked="isAnnual" OnLabel="Annual" OffLabel="Monthly"></SfSwitch>
+        <label>Annual</label>
+    </div>
+
+    <div class="plan-grid">
+        @foreach (var plan in plans)
+        {
+            <div class="plan-card @plan.CssClass">
+                <div class="radio-container">
+                    <input type="radio" id="@plan.Id" name="plan" value="@plan.Name" checked="@(selectedPlan == plan.Name)"
+                        @onchange="@(e => SelectPlan(plan.Name))" />
+                    <label for="@plan.Id">@plan.Name</label>
+                </div>
+                <div class="plan-title">@plan.Name</div>
+                <div class="plan-price">@GetPlanPrice(plan.Name)</div>
+                <ul class="plan-features">
+                    @foreach (var feature in plan.Features)
+                    {
+                        <li>@feature</li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <button class="subscribe-button" @onclick="Subscribe" disabled="@(!isPlanSelected)">
+        Subscribe Now
+    </button>
+
+    <div class="logo-container">
+        <img src="images/logo.png" alt="Logo" width="150" />
+    </div>
+
+    @if (isSubscribed)
+    {
+        <div class="feedback-message">
+            Thank you for subscribing to the @selectedPlan plan with @subscriptionType billing!
+        </div>
+    }
+</div>
+
+@code {
+    private bool isAnnual = false;
+    private string? selectedPlan;
+    private bool isPlanSelected => !string.IsNullOrEmpty(selectedPlan);
+    private bool isSubscribed = false;
+    private string subscriptionType => isAnnual ? "Annual" : "Monthly";
+
+    private List<PlanDetails> plans = new()
+{
+new PlanDetails
+{
+Id = "communityPlan",
+Name = "Community",
+CssClass = "community",
+MonthlyPrice = 0,
+AnnualPrice = 0,
+Features = new[]
+{
+"1 Test Product",
+"1 User",
+"10 Tests",
+"Edge Browser Support",
+"VPN Access"
+}
+},
+new PlanDetails
+{
+Id = "standardPlan",
+Name = "Standard",
+CssClass = "standard",
+MonthlyPrice = 25,
+AnnualPrice = 250,
+Features = new[]
+{
+"1 Test Product",
+"1 User (max 3 devices)",
+"Unlimited Tests",
+"Edge Browser Support",
+"VPN Access",
+"TAC Temp Mail ($9.99/month)",
+"Shared Nodes Available"
+}
+},
+new PlanDetails
+{
+Id = "professionalPlan",
+Name = "Professional",
+CssClass = "professional",
+MonthlyPrice = 75,
+AnnualPrice = 750,
+Features = new[]
+{
+"3 Test Products",
+"1 User (max 3 devices)",
+"Unlimited Tests",
+"Chrome, Edge, Firefox Support",
+"VPN Access",
+"Test Groups",
+"Export Tests ($0.25/action)"
+}
+},
+new PlanDetails
+{
+Id = "enterprisePlan",
+Name = "Enterprise",
+CssClass = "enterprise",
+MonthlyPrice = 99,
+AnnualPrice = 990,
+Features = new[]
+{
+"Unlimited Test Products",
+"1 User (max 3 devices)",
+"Unlimited Tests",
+"All Browser Support",
+"VPN Access",
+"Test Groups",
+"Dedicated Nodes Available",
+"Test Environments"
+}
+}
+};
+
+    private string GetPlanPrice(string plan)
+    {
+        var planDetails = plans.FirstOrDefault(p => p.Name == plan);
+        if (planDetails == null) return "N/A";
+
+        if (isAnnual)
+        {
+            return planDetails.AnnualPrice == 0
+            ? "Free"
+            : $"${planDetails.AnnualPrice}/year";
+        }
+        else
+        {
+            return planDetails.MonthlyPrice == 0
+            ? "Free"
+            : $"${planDetails.MonthlyPrice}/month";
+        }
+    }
+
+    private void SelectPlan(string planName)
+    {
+        selectedPlan = planName;
+        isSubscribed = false;
+    }
+
+    private async Task Subscribe()
+    {
+        // Simulate subscription processing
+        await Task.Delay(1000);
+        isSubscribed = true;
+        StateHasChanged();
+    }
+
+    private class PlanDetails
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string CssClass { get; set; } = "";
+        public decimal MonthlyPrice { get; set; }
+        public decimal AnnualPrice { get; set; }
+        public string[] Features { get; set; } = Array.Empty<string>();
+    }
+}
